@@ -1,14 +1,58 @@
+import { Header } from './components/Header';
+import { KanbanBoard } from './components/KanbanBoard';
+import { useKanbanBoard } from './hooks/useKanbanBoard';
+import type { Column } from './types/kanban';
+
 export default function App() {
+  const {
+    board,
+    filter,
+    isFiltered,
+    stats,
+    matchesFilter,
+    setSearch,
+    setPriorityFilter,
+    clearFilters,
+    addColumn,
+    updateColumn,
+    deleteColumn,
+    resetBoard,
+  } = useKanbanBoard();
+
+  const handleDeleteColumn = (column: Column) => {
+    if (
+      column.cardIds.length > 0 &&
+      !window.confirm(
+        `Excluir a coluna "${column.title}" e seus ${column.cardIds.length} cards?`,
+      )
+    ) {
+      return;
+    }
+    deleteColumn(column.id);
+  };
+
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-          KanbanFlow
-        </h1>
-        <p className="text-sm text-slate-500">
-          Ambiente React + TypeScript + Tailwind CSS pronto.
-        </p>
-      </div>
-    </main>
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      <Header
+        filter={filter}
+        isFiltered={isFiltered}
+        totalCards={stats.totalCards}
+        visibleCards={stats.visibleCards}
+        totalColumns={stats.totalColumns}
+        onSearchChange={setSearch}
+        onPriorityChange={setPriorityFilter}
+        onClearFilters={clearFilters}
+        onResetBoard={resetBoard}
+      />
+
+      <KanbanBoard
+        board={board}
+        isFiltered={isFiltered}
+        matchesFilter={matchesFilter}
+        onAddColumn={addColumn}
+        onRenameColumn={updateColumn}
+        onDeleteColumn={handleDeleteColumn}
+      />
+    </div>
   );
 }
