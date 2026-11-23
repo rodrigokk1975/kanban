@@ -9,6 +9,10 @@ interface KanbanBoardProps {
   onAddColumn: (title: string) => void;
   onRenameColumn: (columnId: string, title: string) => void;
   onDeleteColumn: (column: Column) => void;
+  onQuickAddCard: (columnId: string, title: string) => void;
+  onOpenCreateModal: (columnId: string) => void;
+  onEditCard: (card: Card, columnId: string) => void;
+  onDeleteCard: (card: Card, columnId: string) => void;
 }
 
 export function KanbanBoard({
@@ -18,6 +22,10 @@ export function KanbanBoard({
   onAddColumn,
   onRenameColumn,
   onDeleteColumn,
+  onQuickAddCard,
+  onOpenCreateModal,
+  onEditCard,
+  onDeleteCard,
 }: KanbanBoardProps) {
   return (
     <main className="mx-auto flex w-full max-w-[1600px] flex-1 items-start gap-5 overflow-x-auto px-4 py-6 sm:px-6">
@@ -38,6 +46,10 @@ export function KanbanBoard({
             isFiltered={isFiltered}
             onRenameColumn={onRenameColumn}
             onDeleteColumn={onDeleteColumn}
+            onQuickAddCard={onQuickAddCard}
+            onOpenCreateModal={onOpenCreateModal}
+            onEditCard={onEditCard}
+            onDeleteCard={onDeleteCard}
           />
         );
       })}

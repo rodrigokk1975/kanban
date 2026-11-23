@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Pencil, Trash2, X } from 'lucide-react';
+import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import type { Card, Column } from '../types/kanban';
 import { KanbanCard } from './KanbanCard';
 
@@ -10,8 +10,10 @@ interface KanbanColumnProps {
   isFiltered: boolean;
   onRenameColumn: (columnId: string, title: string) => void;
   onDeleteColumn: (column: Column) => void;
-  onEditCard?: (card: Card, columnId: string) => void;
-  onDeleteCard?: (card: Card, columnId: string) => void;
+  onQuickAddCard: (columnId: string, title: string) => void;
+  onOpenCreateModal: (columnId: string) => void;
+  onEditCard: (card: Card, columnId: string) => void;
+  onDeleteCard: (card: Card, columnId: string) => void;
 }
 
 const COLUMN_ACCENTS = [
@@ -30,11 +32,16 @@ export function KanbanColumn({
   isFiltered,
   onRenameColumn,
   onDeleteColumn,
+  onQuickAddCard,
+  onOpenCreateModal,
   onEditCard,
   onDeleteCard,
 }: KanbanColumnProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [draftTitle, setDraftTitle] = useState(column.title);
+
+  const [isQuickAdding, setIsQuickAdding] = useState(false);
+  const [quickTitle, setQuickTitle] = useState('');
 
   const accentColor = COLUMN_ACCENTS[accentIndex % COLUMN_ACCENTS.length];
 
@@ -51,6 +58,15 @@ export function KanbanColumn({
   const handleCancelTitle = () => {
     setDraftTitle(column.title);
     setIsEditingTitle(false);
+  };
+
+  const handleQuickAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = quickTitle.trim();
+    if (!trimmed) return;
+    onQuickAddCard(column.id, trimmed);
+    setQuickTitle('');
+    setIsQuickAdding(false);
   };
 
   return (
@@ -107,6 +123,15 @@ export function KanbanColumn({
             <div className="flex items-center gap-0.5">
               <button
                 type="button"
+                onClick={() => onOpenCreateModal(column.id)}
+                title="Nova tarefa com detalhes"
+                aria-label={`Nova tarefa em ${column.title}`}
+                className="rounded-md p-1 text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-700"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
                 onClick={() => {
                   setDraftTitle(column.title);
                   setIsEditingTitle(true);
@@ -141,10 +166,76 @@ export function KanbanColumn({
             <KanbanCard
               key={card.id}
               card={card}
-              onEdit={onEditCard ? (item) => onEditCard(item, column.id) : undefined}
-              onDelete={onDeleteCard ? (item) => onDeleteCard(item, column.id) : undefined}
+              onEdit={(item) => onEditCard(item, column.id)}
+              onDelete={(item) => onDeleteCard(item, column.id)}
             />
           ))
+        )}
+      </div>
+
+      <div className="mt-3 pt-1">
+        {isQuickAdding ? (
+          <form
+            onSubmit={handleQuickAddSubmit}
+            className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs"
+          >
+            <input
+              type="text"
+              value={quickTitle}
+              onChange={(e) => setQuickTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setQuickTitle('');
+                  setIsQuickAdding(false);
+                }
+              }}
+              placeholder="Título da tarefa..."
+              autoFocus
+              aria-label="Título rápido da tarefa"
+              className="w-full rounded-md bg-transparent px-1 py-1 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none"
+            />
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setQuickTitle('');
+                  setIsQuickAdding(false);
+                  onOpenCreateModal(column.id);
+                }}
+                className="text-[11px] font-medium text-indigo-600 hover:underline"
+              >
+                Mais detalhes
+              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuickTitle('');
+                    setIsQuickAdding(false);
+                  }}
+                  className="rounded-md px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={!quickTitle.trim()}
+                  className="rounded-md bg-slate-900 px-2.5 py-1 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-40"
+                >
+                  Adicionar
+                </button>
+              </div>
+            </div>
+          </form>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setIsQuickAdding(true)}
+            className="flex w-full items-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-200/70 hover:text-slate-900"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Adicionar tarefa
+          </button>
         )}
       </div>
     </section>
