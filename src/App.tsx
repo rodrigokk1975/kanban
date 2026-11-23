@@ -30,9 +30,11 @@ export default function App() {
     addColumn,
     updateColumn,
     deleteColumn,
+    moveColumn,
     addCard,
     updateCard,
     deleteCard,
+    moveCard,
     resetBoard,
   } = useKanbanBoard();
 
@@ -135,6 +137,8 @@ export default function App() {
         onAddColumn={addColumn}
         onRenameColumn={updateColumn}
         onDeleteColumn={handleRequestDeleteColumn}
+        onMoveColumn={moveColumn}
+        onMoveCard={moveCard}
         onQuickAddCard={handleQuickAddCard}
         onOpenCreateModal={(columnId) =>
           setCardModal({ isOpen: true, mode: 'create', columnId })

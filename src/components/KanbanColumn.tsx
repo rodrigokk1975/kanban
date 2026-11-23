@@ -1,13 +1,20 @@
 import { useState } from 'react';
-import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
+import type { DraggableAttributes } from '@dnd-kit/core';
+import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { Check, GripVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
 import type { Card, Column } from '../types/kanban';
-import { KanbanCard } from './KanbanCard';
+import { SortableCard } from './SortableCard';
 
 interface KanbanColumnProps {
   column: Column;
   cards: Card[];
   accentIndex: number;
   isFiltered: boolean;
+  isOver?: boolean;
+  isOverlay?: boolean;
+  dragHandleAttributes?: DraggableAttributes;
+  dragHandleListeners?: SyntheticListenerMap;
   onRenameColumn: (columnId: string, title: string) => void;
   onDeleteColumn: (column: Column) => void;
   onQuickAddCard: (columnId: string, title: string) => void;
@@ -30,6 +37,10 @@ export function KanbanColumn({
   cards,
   accentIndex,
   isFiltered,
+  isOver = false,
+  isOverlay = false,
+  dragHandleAttributes,
+  dragHandleListeners,
   onRenameColumn,
   onDeleteColumn,
   onQuickAddCard,
@@ -44,6 +55,7 @@ export function KanbanColumn({
   const [quickTitle, setQuickTitle] = useState('');
 
   const accentColor = COLUMN_ACCENTS[accentIndex % COLUMN_ACCENTS.length];
+  const cardIds = cards.map((card) => card.id);
 
   const handleSaveTitle = () => {
     const trimmed = draftTitle.trim();
@@ -72,7 +84,13 @@ export function KanbanColumn({
   return (
     <section
       aria-label={`Coluna ${column.title}`}
-      className="flex max-h-[calc(100vh-8.5rem)] w-80 shrink-0 flex-col rounded-2xl border border-slate-200/80 bg-slate-100/75 p-3"
+      className={`flex max-h-[calc(100vh-8.5rem)] w-80 shrink-0 flex-col rounded-2xl border p-3 transition-colors ${
+        isOverlay
+          ? 'border-indigo-300 bg-slate-100 shadow-xl ring-2 ring-indigo-500/20'
+          : isOver
+            ? 'border-indigo-300 bg-indigo-50/45'
+            : 'border-slate-200/80 bg-slate-100/75'
+      }`}
     >
       <div className="mb-3 flex items-center justify-between gap-2 px-1">
         {isEditingTitle ? (
@@ -112,7 +130,16 @@ export function KanbanColumn({
           </form>
         ) : (
           <>
-            <div className="flex min-w-0 items-center gap-2">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <button
+                type="button"
+                {...dragHandleAttributes}
+                {...dragHandleListeners}
+                aria-label={`Arrastar coluna ${column.title}`}
+                className="cursor-grab touch-none rounded p-0.5 text-slate-400 transition hover:bg-slate-200/80 hover:text-slate-600 active:cursor-grabbing"
+              >
+                <GripVertical className="h-3.5 w-3.5" />
+              </button>
               <span className={`h-2 w-2 shrink-0 rounded-full ${accentColor}`} />
               <h2 className="truncate text-sm font-semibold text-slate-800">{column.title}</h2>
               <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-slate-200/80 px-1.5 text-[11px] font-semibold text-slate-600">
@@ -154,24 +181,27 @@ export function KanbanColumn({
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto pr-0.5">
-        {cards.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300/80 bg-white/40 px-4 py-8 text-center">
-            <p className="text-xs font-medium text-slate-500">
-              {isFiltered ? 'Nenhum card corresponde ao filtro' : 'Nenhum card nesta coluna'}
-            </p>
-          </div>
-        ) : (
-          cards.map((card) => (
-            <KanbanCard
-              key={card.id}
-              card={card}
-              onEdit={(item) => onEditCard(item, column.id)}
-              onDelete={(item) => onDeleteCard(item, column.id)}
-            />
-          ))
-        )}
-      </div>
+      <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
+        <div className="flex min-h-[4rem] flex-1 flex-col gap-2.5 overflow-y-auto pr-0.5">
+          {cards.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300/80 bg-white/40 px-4 py-8 text-center">
+              <p className="text-xs font-medium text-slate-500">
+                {isFiltered ? 'Nenhum card corresponde ao filtro' : 'Arraste ou adicione um card'}
+              </p>
+            </div>
+          ) : (
+            cards.map((card) => (
+              <SortableCard
+                key={card.id}
+                card={card}
+                columnId={column.id}
+                onEdit={onEditCard}
+                onDelete={onDeleteCard}
+              />
+            ))
+          )}
+        </div>
+      </SortableContext>
 
       <div className="mt-3 pt-1">
         {isQuickAdding ? (
