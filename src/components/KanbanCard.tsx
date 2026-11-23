@@ -31,6 +31,7 @@ export function KanbanCard({ card, onEdit, onDelete, isOverlay = false }: Kanban
 
   return (
     <article
+      onDoubleClick={() => onEdit?.(card)}
       className={`group relative rounded-xl border bg-white p-3.5 transition ${
         isOverlay
           ? 'rotate-1 border-indigo-300 shadow-lg ring-2 ring-indigo-500/20'

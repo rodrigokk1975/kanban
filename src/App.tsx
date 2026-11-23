@@ -117,7 +117,7 @@ export default function App() {
   })();
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="kanban-canvas flex min-h-screen flex-col">
       <Header
         filter={filter}
         isFiltered={isFiltered}
